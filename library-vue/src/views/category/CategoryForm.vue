@@ -37,8 +37,8 @@ export default {
   methods: {
     async fetchData(id) {
       try {
-        const res = await categoryApi.getById(id)
-        this.form = res.data
+        const data = await categoryApi.getById(id)
+        this.form = data
       } catch (e) {
         alert('获取数据失败')
       }

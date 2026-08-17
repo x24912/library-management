@@ -1,9 +1,9 @@
 package com.huade.servlets;
 
 import com.google.gson.Gson;
+import com.huade.common.Result;
 import com.huade.entity.Book;
 import com.huade.entity.PageResult;
-import com.huade.entity.ResponseData;
 import com.huade.service.BookService;
 import com.huade.service.impl.BookServiceImpl;
 
@@ -34,14 +34,12 @@ public class BookServlet extends HttpServlet {
                 int id = Integer.parseInt(pathInfo.substring(1));
                 Book entity = service.findById(id);
                 if (entity != null) {
-                    response.getWriter().write(gson.toJson(entity));
+                    response.getWriter().write(gson.toJson(Result.success(entity)));
                 } else {
-                    response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                    response.getWriter().write(gson.toJson(new ResponseData(false, "数据未找到")));
+                    response.getWriter().write(gson.toJson(Result.error(404, "数据未找到")));
                 }
             } catch (NumberFormatException e) {
-                response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-                response.getWriter().write(gson.toJson(new ResponseData(false, "无效的ID")));
+                response.getWriter().write(gson.toJson(Result.error(400, "无效的ID")));
             }
             return;
         }
@@ -52,14 +50,14 @@ public class BookServlet extends HttpServlet {
             if (request.getParameter("page") != null) page = Integer.parseInt(request.getParameter("page"));
             if (request.getParameter("limit") != null) limit = Integer.parseInt(request.getParameter("limit"));
         } catch (Exception e) {
-            page = 1; limit = 10;
+            page = 1;
+            limit = 10;
         }
-        final int MAX_LIMIT = 100;
-        limit = Math.max(1, Math.min(limit, MAX_LIMIT));
+        limit = Math.max(1, Math.min(limit, 100));
         page = Math.max(1, page);
 
         PageResult<Book> result = service.search(keyword, page, limit);
-        response.getWriter().write(gson.toJson(result));
+        response.getWriter().write(gson.toJson(Result.success(result)));
     }
 
     @Override
@@ -75,7 +73,7 @@ public class BookServlet extends HttpServlet {
         Gson gson = new Gson();
         Book entity = gson.fromJson(sb.toString(), Book.class);
         service.add(entity);
-        response.getWriter().write(gson.toJson(new ResponseData(true, "添加成功")));
+        response.getWriter().write(gson.toJson(Result.success("添加成功", null)));
     }
 
     @Override
@@ -84,8 +82,7 @@ public class BookServlet extends HttpServlet {
         response.setContentType("application/json;charset=UTF-8");
         String pathInfo = request.getPathInfo();
         if (pathInfo == null || pathInfo.equals("/")) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().write(new Gson().toJson(new ResponseData(false, "请求路径必须包含ID")));
+            response.getWriter().write(new Gson().toJson(Result.error(400, "请求路径必须包含ID")));
             return;
         }
         try {
@@ -100,14 +97,12 @@ public class BookServlet extends HttpServlet {
             entity.setId(id);
             int result = service.modify(entity);
             if (result > 0) {
-                response.getWriter().write(gson.toJson(new ResponseData(true, "更新成功")));
+                response.getWriter().write(gson.toJson(Result.success("更新成功", null)));
             } else {
-                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
-                response.getWriter().write(gson.toJson(new ResponseData(false, "数据未找到")));
+                response.getWriter().write(gson.toJson(Result.error(404, "数据未找到")));
             }
         } catch (NumberFormatException e) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().write(new Gson().toJson(new ResponseData(false, "无效的ID")));
+            response.getWriter().write(new Gson().toJson(Result.error(400, "无效的ID")));
         }
     }
 
@@ -117,13 +112,12 @@ public class BookServlet extends HttpServlet {
         response.setContentType("application/json;charset=UTF-8");
         String pathInfo = request.getPathInfo();
         if (pathInfo == null || pathInfo.equals("/")) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            response.getWriter().write(new Gson().toJson(new ResponseData(false, "请求路径必须包含ID")));
+            response.getWriter().write(new Gson().toJson(Result.error(400, "请求路径必须包含ID")));
             return;
         }
         int id = Integer.parseInt(pathInfo.substring(1));
         service.remove(id);
-        response.getWriter().write(new Gson().toJson(new ResponseData(true, "删除成功")));
+        response.getWriter().write(new Gson().toJson(Result.success("删除成功", null)));
     }
 
     @Override

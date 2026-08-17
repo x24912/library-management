@@ -4,46 +4,46 @@ import com.huade.dao.BookDao;
 import com.huade.entity.Book;
 import com.huade.utils.DBUtils;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class BookDaoImpl implements BookDao {
-    DBUtils db = new DBUtils();
 
     @Override
     public List<Book> findAll() {
         List<Book> list = new ArrayList<>();
         String sql = "select * from book";
-        ResultSet rs = db.executeQuery(sql);
-        try {
+        try (Connection conn = DBUtils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 list.add(mapBook(rs));
             }
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            db.closeDB();
         }
         return list;
     }
 
     @Override
     public Book findById(int id) {
-        Book b = null;
         String sql = "select * from book where id=?";
-        ResultSet rs = db.executeQuery(sql, new String[]{String.valueOf(id)});
-        try {
-            if (rs.next()) {
-                b = mapBook(rs);
+        try (Connection conn = DBUtils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapBook(rs);
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            db.closeDB();
         }
-        return b;
+        return null;
     }
 
     @Override
@@ -58,17 +58,23 @@ public class BookDaoImpl implements BookDao {
             params.add(like);
             params.add(like);
         }
-        sql.append(" order by id desc limit ").append(limit).append(" offset ").append((page - 1) * limit);
+        sql.append(" order by id desc limit ? offset ?");
 
-        ResultSet rs = db.executeQuery(sql.toString(), params.toArray(new String[0]));
-        try {
-            while (rs.next()) {
-                list.add(mapBook(rs));
+        try (Connection conn = DBUtils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int i = 1;
+            for (String p : params) {
+                ps.setString(i++, p);
+            }
+            ps.setInt(i++, limit);
+            ps.setInt(i, (page - 1) * limit);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapBook(rs));
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            db.closeDB();
         }
         return list;
     }
@@ -84,15 +90,19 @@ public class BookDaoImpl implements BookDao {
             params.add(like);
             params.add(like);
         }
-        ResultSet rs = db.executeQuery(sql.toString(), params.toArray(new String[0]));
-        try {
-            if (rs.next()) {
-                return rs.getInt(1);
+        try (Connection conn = DBUtils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int i = 1;
+            for (String p : params) {
+                ps.setString(i++, p);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            db.closeDB();
         }
         return 0;
     }
@@ -100,26 +110,51 @@ public class BookDaoImpl implements BookDao {
     @Override
     public int insert(Book book) {
         String sql = "insert into book(book_title,author,isbn,category,stock_quantity,storage_location) values(?,?,?,?,?,?)";
-        return db.executeSQL(sql, new String[]{
-            book.getBookTitle(), book.getAuthor(), book.getIsbn(),
-            book.getCategory(), String.valueOf(book.getStockQuantity()), book.getStorageLocation()
-        });
+        try (Connection conn = DBUtils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, book.getBookTitle());
+            ps.setString(2, book.getAuthor());
+            ps.setString(3, book.getIsbn());
+            ps.setString(4, book.getCategory());
+            ps.setInt(5, book.getStockQuantity());
+            ps.setString(6, book.getStorageLocation());
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
+        }
     }
 
     @Override
     public int update(Book book) {
         String sql = "update book set book_title=?,author=?,isbn=?,category=?,stock_quantity=?,storage_location=? where id=?";
-        return db.executeSQL(sql, new String[]{
-            book.getBookTitle(), book.getAuthor(), book.getIsbn(),
-            book.getCategory(), String.valueOf(book.getStockQuantity()), book.getStorageLocation(),
-            String.valueOf(book.getId())
-        });
+        try (Connection conn = DBUtils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, book.getBookTitle());
+            ps.setString(2, book.getAuthor());
+            ps.setString(3, book.getIsbn());
+            ps.setString(4, book.getCategory());
+            ps.setInt(5, book.getStockQuantity());
+            ps.setString(6, book.getStorageLocation());
+            ps.setInt(7, book.getId());
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
+        }
     }
 
     @Override
     public int delete(int id) {
         String sql = "delete from book where id=?";
-        return db.executeSQL(sql, new String[]{String.valueOf(id)});
+        try (Connection conn = DBUtils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
+        }
     }
 
     private Book mapBook(ResultSet rs) throws SQLException {

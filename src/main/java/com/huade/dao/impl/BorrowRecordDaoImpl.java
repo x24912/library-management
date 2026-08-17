@@ -4,46 +4,46 @@ import com.huade.dao.BorrowRecordDao;
 import com.huade.entity.BorrowRecord;
 import com.huade.utils.DBUtils;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class BorrowRecordDaoImpl implements BorrowRecordDao {
-    DBUtils db = new DBUtils();
 
     @Override
     public List<BorrowRecord> findAll() {
         List<BorrowRecord> list = new ArrayList<>();
         String sql = "select * from borrow_record";
-        ResultSet rs = db.executeQuery(sql);
-        try {
+        try (Connection conn = DBUtils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 list.add(mapBorrowRecord(rs));
             }
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            db.closeDB();
         }
         return list;
     }
 
     @Override
     public BorrowRecord findById(int id) {
-        BorrowRecord r = null;
         String sql = "select * from borrow_record where id=?";
-        ResultSet rs = db.executeQuery(sql, new String[]{String.valueOf(id)});
-        try {
-            if (rs.next()) {
-                r = mapBorrowRecord(rs);
+        try (Connection conn = DBUtils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapBorrowRecord(rs);
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            db.closeDB();
         }
-        return r;
+        return null;
     }
 
     @Override
@@ -58,17 +58,23 @@ public class BorrowRecordDaoImpl implements BorrowRecordDao {
             params.add(like);
             params.add(like);
         }
-        sql.append(" order by id desc limit ").append(limit).append(" offset ").append((page - 1) * limit);
+        sql.append(" order by id desc limit ? offset ?");
 
-        ResultSet rs = db.executeQuery(sql.toString(), params.toArray(new String[0]));
-        try {
-            while (rs.next()) {
-                list.add(mapBorrowRecord(rs));
+        try (Connection conn = DBUtils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int i = 1;
+            for (String p : params) {
+                ps.setString(i++, p);
+            }
+            ps.setInt(i++, limit);
+            ps.setInt(i, (page - 1) * limit);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapBorrowRecord(rs));
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            db.closeDB();
         }
         return list;
     }
@@ -84,15 +90,19 @@ public class BorrowRecordDaoImpl implements BorrowRecordDao {
             params.add(like);
             params.add(like);
         }
-        ResultSet rs = db.executeQuery(sql.toString(), params.toArray(new String[0]));
-        try {
-            if (rs.next()) {
-                return rs.getInt(1);
+        try (Connection conn = DBUtils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int i = 1;
+            for (String p : params) {
+                ps.setString(i++, p);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            db.closeDB();
         }
         return 0;
     }
@@ -100,26 +110,51 @@ public class BorrowRecordDaoImpl implements BorrowRecordDao {
     @Override
     public int insert(BorrowRecord record) {
         String sql = "insert into borrow_record(book_title,reader_name,borrow_date,due_date,actual_return_date,status) values(?,?,?,?,?,?)";
-        return db.executeSQL(sql, new String[]{
-            record.getBookTitle(), record.getReaderName(), record.getBorrowDate(),
-            record.getDueDate(), record.getActualReturnDate(), record.getStatus()
-        });
+        try (Connection conn = DBUtils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, record.getBookTitle());
+            ps.setString(2, record.getReaderName());
+            ps.setString(3, record.getBorrowDate());
+            ps.setString(4, record.getDueDate());
+            ps.setString(5, record.getActualReturnDate());
+            ps.setString(6, record.getStatus());
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
+        }
     }
 
     @Override
     public int update(BorrowRecord record) {
         String sql = "update borrow_record set book_title=?,reader_name=?,borrow_date=?,due_date=?,actual_return_date=?,status=? where id=?";
-        return db.executeSQL(sql, new String[]{
-            record.getBookTitle(), record.getReaderName(), record.getBorrowDate(),
-            record.getDueDate(), record.getActualReturnDate(), record.getStatus(),
-            String.valueOf(record.getId())
-        });
+        try (Connection conn = DBUtils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, record.getBookTitle());
+            ps.setString(2, record.getReaderName());
+            ps.setString(3, record.getBorrowDate());
+            ps.setString(4, record.getDueDate());
+            ps.setString(5, record.getActualReturnDate());
+            ps.setString(6, record.getStatus());
+            ps.setInt(7, record.getId());
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
+        }
     }
 
     @Override
     public int delete(int id) {
         String sql = "delete from borrow_record where id=?";
-        return db.executeSQL(sql, new String[]{String.valueOf(id)});
+        try (Connection conn = DBUtils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
+        }
     }
 
     private BorrowRecord mapBorrowRecord(ResultSet rs) throws SQLException {

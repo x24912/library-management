@@ -4,46 +4,46 @@ import com.huade.dao.OverdueFineDao;
 import com.huade.entity.OverdueFine;
 import com.huade.utils.DBUtils;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class OverdueFineDaoImpl implements OverdueFineDao {
-    DBUtils db = new DBUtils();
 
     @Override
     public List<OverdueFine> findAll() {
         List<OverdueFine> list = new ArrayList<>();
         String sql = "select * from overdue_fine";
-        ResultSet rs = db.executeQuery(sql);
-        try {
+        try (Connection conn = DBUtils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 list.add(mapFine(rs));
             }
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            db.closeDB();
         }
         return list;
     }
 
     @Override
     public OverdueFine findById(int id) {
-        OverdueFine f = null;
         String sql = "select * from overdue_fine where id=?";
-        ResultSet rs = db.executeQuery(sql, new String[]{String.valueOf(id)});
-        try {
-            if (rs.next()) {
-                f = mapFine(rs);
+        try (Connection conn = DBUtils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapFine(rs);
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            db.closeDB();
         }
-        return f;
+        return null;
     }
 
     @Override
@@ -58,17 +58,23 @@ public class OverdueFineDaoImpl implements OverdueFineDao {
             params.add(like);
             params.add(like);
         }
-        sql.append(" order by id desc limit ").append(limit).append(" offset ").append((page - 1) * limit);
+        sql.append(" order by id desc limit ? offset ?");
 
-        ResultSet rs = db.executeQuery(sql.toString(), params.toArray(new String[0]));
-        try {
-            while (rs.next()) {
-                list.add(mapFine(rs));
+        try (Connection conn = DBUtils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int i = 1;
+            for (String p : params) {
+                ps.setString(i++, p);
+            }
+            ps.setInt(i++, limit);
+            ps.setInt(i, (page - 1) * limit);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapFine(rs));
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            db.closeDB();
         }
         return list;
     }
@@ -84,15 +90,19 @@ public class OverdueFineDaoImpl implements OverdueFineDao {
             params.add(like);
             params.add(like);
         }
-        ResultSet rs = db.executeQuery(sql.toString(), params.toArray(new String[0]));
-        try {
-            if (rs.next()) {
-                return rs.getInt(1);
+        try (Connection conn = DBUtils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int i = 1;
+            for (String p : params) {
+                ps.setString(i++, p);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            db.closeDB();
         }
         return 0;
     }
@@ -100,26 +110,49 @@ public class OverdueFineDaoImpl implements OverdueFineDao {
     @Override
     public int insert(OverdueFine fine) {
         String sql = "insert into overdue_fine(reader_name,book_title,overdue_days,fine_amount,payment_status) values(?,?,?,?,?)";
-        return db.executeSQL(sql, new String[]{
-            fine.getReaderName(), fine.getBookTitle(), String.valueOf(fine.getOverdueDays()),
-            String.valueOf(fine.getFineAmount()), fine.getPaymentStatus()
-        });
+        try (Connection conn = DBUtils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, fine.getReaderName());
+            ps.setString(2, fine.getBookTitle());
+            ps.setInt(3, fine.getOverdueDays());
+            ps.setDouble(4, fine.getFineAmount());
+            ps.setString(5, fine.getPaymentStatus());
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
+        }
     }
 
     @Override
     public int update(OverdueFine fine) {
         String sql = "update overdue_fine set reader_name=?,book_title=?,overdue_days=?,fine_amount=?,payment_status=? where id=?";
-        return db.executeSQL(sql, new String[]{
-            fine.getReaderName(), fine.getBookTitle(), String.valueOf(fine.getOverdueDays()),
-            String.valueOf(fine.getFineAmount()), fine.getPaymentStatus(),
-            String.valueOf(fine.getId())
-        });
+        try (Connection conn = DBUtils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, fine.getReaderName());
+            ps.setString(2, fine.getBookTitle());
+            ps.setInt(3, fine.getOverdueDays());
+            ps.setDouble(4, fine.getFineAmount());
+            ps.setString(5, fine.getPaymentStatus());
+            ps.setInt(6, fine.getId());
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
+        }
     }
 
     @Override
     public int delete(int id) {
         String sql = "delete from overdue_fine where id=?";
-        return db.executeSQL(sql, new String[]{String.valueOf(id)});
+        try (Connection conn = DBUtils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
+        }
     }
 
     private OverdueFine mapFine(ResultSet rs) throws SQLException {

@@ -4,46 +4,46 @@ import com.huade.dao.ReaderDao;
 import com.huade.entity.Reader;
 import com.huade.utils.DBUtils;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ReaderDaoImpl implements ReaderDao {
-    DBUtils db = new DBUtils();
 
     @Override
     public List<Reader> findAll() {
         List<Reader> list = new ArrayList<>();
         String sql = "select * from reader";
-        ResultSet rs = db.executeQuery(sql);
-        try {
+        try (Connection conn = DBUtils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 list.add(mapReader(rs));
             }
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            db.closeDB();
         }
         return list;
     }
 
     @Override
     public Reader findById(int id) {
-        Reader r = null;
         String sql = "select * from reader where id=?";
-        ResultSet rs = db.executeQuery(sql, new String[]{String.valueOf(id)});
-        try {
-            if (rs.next()) {
-                r = mapReader(rs);
+        try (Connection conn = DBUtils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapReader(rs);
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            db.closeDB();
         }
-        return r;
+        return null;
     }
 
     @Override
@@ -58,17 +58,23 @@ public class ReaderDaoImpl implements ReaderDao {
             params.add(like);
             params.add(like);
         }
-        sql.append(" order by id desc limit ").append(limit).append(" offset ").append((page - 1) * limit);
+        sql.append(" order by id desc limit ? offset ?");
 
-        ResultSet rs = db.executeQuery(sql.toString(), params.toArray(new String[0]));
-        try {
-            while (rs.next()) {
-                list.add(mapReader(rs));
+        try (Connection conn = DBUtils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int i = 1;
+            for (String p : params) {
+                ps.setString(i++, p);
+            }
+            ps.setInt(i++, limit);
+            ps.setInt(i, (page - 1) * limit);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapReader(rs));
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            db.closeDB();
         }
         return list;
     }
@@ -84,15 +90,19 @@ public class ReaderDaoImpl implements ReaderDao {
             params.add(like);
             params.add(like);
         }
-        ResultSet rs = db.executeQuery(sql.toString(), params.toArray(new String[0]));
-        try {
-            if (rs.next()) {
-                return rs.getInt(1);
+        try (Connection conn = DBUtils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int i = 1;
+            for (String p : params) {
+                ps.setString(i++, p);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            db.closeDB();
         }
         return 0;
     }
@@ -100,26 +110,51 @@ public class ReaderDaoImpl implements ReaderDao {
     @Override
     public int insert(Reader reader) {
         String sql = "insert into reader(full_name,student_id,class_name,max_borrow_count,borrowed_count,contact_number) values(?,?,?,?,?,?)";
-        return db.executeSQL(sql, new String[]{
-            reader.getFullName(), reader.getStudentId(), reader.getClassName(),
-            String.valueOf(reader.getMaxBorrowCount()), String.valueOf(reader.getBorrowedCount()), reader.getContactNumber()
-        });
+        try (Connection conn = DBUtils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, reader.getFullName());
+            ps.setString(2, reader.getStudentId());
+            ps.setString(3, reader.getClassName());
+            ps.setInt(4, reader.getMaxBorrowCount());
+            ps.setInt(5, reader.getBorrowedCount());
+            ps.setString(6, reader.getContactNumber());
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
+        }
     }
 
     @Override
     public int update(Reader reader) {
         String sql = "update reader set full_name=?,student_id=?,class_name=?,max_borrow_count=?,borrowed_count=?,contact_number=? where id=?";
-        return db.executeSQL(sql, new String[]{
-            reader.getFullName(), reader.getStudentId(), reader.getClassName(),
-            String.valueOf(reader.getMaxBorrowCount()), String.valueOf(reader.getBorrowedCount()), reader.getContactNumber(),
-            String.valueOf(reader.getId())
-        });
+        try (Connection conn = DBUtils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, reader.getFullName());
+            ps.setString(2, reader.getStudentId());
+            ps.setString(3, reader.getClassName());
+            ps.setInt(4, reader.getMaxBorrowCount());
+            ps.setInt(5, reader.getBorrowedCount());
+            ps.setString(6, reader.getContactNumber());
+            ps.setInt(7, reader.getId());
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
+        }
     }
 
     @Override
     public int delete(int id) {
         String sql = "delete from reader where id=?";
-        return db.executeSQL(sql, new String[]{String.valueOf(id)});
+        try (Connection conn = DBUtils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
+        }
     }
 
     private Reader mapReader(ResultSet rs) throws SQLException {

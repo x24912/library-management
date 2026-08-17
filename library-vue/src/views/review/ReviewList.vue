@@ -64,9 +64,9 @@ export default {
   methods: {
     async fetchList() {
       try {
-        const res = await reviewApi.list({ page: this.page, limit: this.limit, keyword: this.keyword })
-        this.list = res.data.data || []
-        this.total = res.data.total || 0
+        const data = await reviewApi.list({ page: this.page, limit: this.limit, keyword: this.keyword })
+        this.list = data.data || []
+        this.total = data.total || 0
       } catch (e) {
         alert('获取列表失败')
       }

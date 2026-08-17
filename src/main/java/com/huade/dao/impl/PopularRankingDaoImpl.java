@@ -4,46 +4,46 @@ import com.huade.dao.PopularRankingDao;
 import com.huade.entity.PopularRanking;
 import com.huade.utils.DBUtils;
 
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
 public class PopularRankingDaoImpl implements PopularRankingDao {
-    DBUtils db = new DBUtils();
 
     @Override
     public List<PopularRanking> findAll() {
         List<PopularRanking> list = new ArrayList<>();
         String sql = "select * from popular_ranking";
-        ResultSet rs = db.executeQuery(sql);
-        try {
+        try (Connection conn = DBUtils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql);
+             ResultSet rs = ps.executeQuery()) {
             while (rs.next()) {
                 list.add(mapRanking(rs));
             }
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            db.closeDB();
         }
         return list;
     }
 
     @Override
     public PopularRanking findById(int id) {
-        PopularRanking r = null;
         String sql = "select * from popular_ranking where id=?";
-        ResultSet rs = db.executeQuery(sql, new String[]{String.valueOf(id)});
-        try {
-            if (rs.next()) {
-                r = mapRanking(rs);
+        try (Connection conn = DBUtils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return mapRanking(rs);
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            db.closeDB();
         }
-        return r;
+        return null;
     }
 
     @Override
@@ -57,20 +57,27 @@ public class PopularRankingDaoImpl implements PopularRankingDao {
             params.add(like);
             params.add(like);
         }
-        sql.append(" order by id desc limit ").append(limit).append(" offset ").append((page - 1) * limit);
+        sql.append(" order by id desc limit ? offset ?");
 
-        ResultSet rs = db.executeQuery(sql.toString(), params.toArray(new String[0]));
-        try {
-            while (rs.next()) {
-                list.add(mapRanking(rs));
+        try (Connection conn = DBUtils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int i = 1;
+            for (String p : params) {
+                ps.setString(i++, p);
+            }
+            ps.setInt(i++, limit);
+            ps.setInt(i, (page - 1) * limit);
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    list.add(mapRanking(rs));
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            db.closeDB();
         }
         return list;
     }
+
     @Override
     public int count(String keyword) {
         StringBuilder sql = new StringBuilder("select count(*) from popular_ranking where 1=1");
@@ -81,15 +88,19 @@ public class PopularRankingDaoImpl implements PopularRankingDao {
             params.add(like);
             params.add(like);
         }
-        ResultSet rs = db.executeQuery(sql.toString(), params.toArray(new String[0]));
-        try {
-            if (rs.next()) {
-                return rs.getInt(1);
+        try (Connection conn = DBUtils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql.toString())) {
+            int i = 1;
+            for (String p : params) {
+                ps.setString(i++, p);
+            }
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1);
+                }
             }
         } catch (SQLException e) {
             e.printStackTrace();
-        } finally {
-            db.closeDB();
         }
         return 0;
     }
@@ -97,26 +108,47 @@ public class PopularRankingDaoImpl implements PopularRankingDao {
     @Override
     public int insert(PopularRanking ranking) {
         String sql = "insert into popular_ranking(book_title,monthly_borrow_times,total_borrow_times,statistics_month) values(?,?,?,?)";
-        return db.executeSQL(sql, new String[]{
-            ranking.getBookTitle(), String.valueOf(ranking.getMonthlyBorrowTimes()),
-            String.valueOf(ranking.getTotalBorrowTimes()), ranking.getStatisticsMonth()
-        });
+        try (Connection conn = DBUtils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, ranking.getBookTitle());
+            ps.setInt(2, ranking.getMonthlyBorrowTimes());
+            ps.setInt(3, ranking.getTotalBorrowTimes());
+            ps.setString(4, ranking.getStatisticsMonth());
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
+        }
     }
 
     @Override
     public int update(PopularRanking ranking) {
         String sql = "update popular_ranking set book_title=?,monthly_borrow_times=?,total_borrow_times=?,statistics_month=? where id=?";
-        return db.executeSQL(sql, new String[]{
-            ranking.getBookTitle(), String.valueOf(ranking.getMonthlyBorrowTimes()),
-            String.valueOf(ranking.getTotalBorrowTimes()), ranking.getStatisticsMonth(),
-            String.valueOf(ranking.getId())
-        });
+        try (Connection conn = DBUtils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, ranking.getBookTitle());
+            ps.setInt(2, ranking.getMonthlyBorrowTimes());
+            ps.setInt(3, ranking.getTotalBorrowTimes());
+            ps.setString(4, ranking.getStatisticsMonth());
+            ps.setInt(5, ranking.getId());
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
+        }
     }
 
     @Override
     public int delete(int id) {
         String sql = "delete from popular_ranking where id=?";
-        return db.executeSQL(sql, new String[]{String.valueOf(id)});
+        try (Connection conn = DBUtils.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            return ps.executeUpdate();
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return 0;
+        }
     }
 
     private PopularRanking mapRanking(ResultSet rs) throws SQLException {

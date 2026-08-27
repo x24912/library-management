@@ -158,3 +158,16 @@ INSERT INTO popular_ranking (book_title, monthly_borrow_times, total_borrow_time
 ('平凡的世界', 14, 110, '2026-06'),
 ('明朝那些事儿', 16, 130, '2026-06'),
 ('毛泽东传', 8, 65, '2026-06');
+
+-- ========== 借阅记录外键回填（borrow_record 按书名/读者名匹配主表） ==========
+UPDATE borrow_record br
+    JOIN book b ON b.book_title = br.book_title
+SET br.book_id = b.id;
+
+UPDATE borrow_record br
+    JOIN reader r ON r.full_name = br.reader_name
+SET br.reader_id = r.id;
+
+-- ========== 管理员（默认账号 admin / 123456，密码为 PBKDF2 哈希） ==========
+INSERT INTO admin (username, password) VALUES
+('admin', '10000:3Y3N4vEoO3I2s6o8SXLyHQ==:LVSsn+zPqzz3TlccVuOCsO1QVjmTK7kONOGoC1L/b8I=');

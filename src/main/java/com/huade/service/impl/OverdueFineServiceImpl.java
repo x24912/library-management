@@ -1,44 +1,49 @@
 package com.huade.service.impl;
 
-import com.huade.dao.OverdueFineDao;
-import com.huade.dao.impl.OverdueFineDaoImpl;
 import com.huade.entity.OverdueFine;
 import com.huade.entity.PageResult;
+import com.huade.mapper.OverdueFineMapper;
 import com.huade.service.OverdueFineService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import java.util.List;
 
+@Service
 public class OverdueFineServiceImpl implements OverdueFineService {
-    private OverdueFineDao fineDao = new OverdueFineDaoImpl();
+
+    @Autowired
+    private OverdueFineMapper overdueFineMapper;
 
     @Override
     public List<OverdueFine> findAll() {
-        return fineDao.findAll();
+        return overdueFineMapper.findAll();
     }
 
     @Override
     public OverdueFine findById(int id) {
-        return fineDao.findById(id);
+        return overdueFineMapper.findById(id);
     }
 
     @Override
     public int add(OverdueFine fine) {
-        return fineDao.insert(fine);
+        return overdueFineMapper.insert(fine);
     }
 
     @Override
     public int modify(OverdueFine fine) {
-        return fineDao.update(fine);
+        return overdueFineMapper.update(fine);
     }
 
     @Override
     public int remove(int id) {
-        return fineDao.delete(id);
+        return overdueFineMapper.deleteById(id);
     }
 
     @Override
     public PageResult<OverdueFine> search(String keyword, int page, int limit) {
-        List<OverdueFine> data = fineDao.search(keyword, page, limit);
-        int total = fineDao.count(keyword);
+        List<OverdueFine> data = overdueFineMapper.search(keyword, (page - 1) * limit, limit);
+        int total = overdueFineMapper.count(keyword);
         return new PageResult<>(data, page, limit, total);
     }
 }

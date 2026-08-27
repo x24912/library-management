@@ -15,8 +15,15 @@ target/
 # 日志
 *.log
 
+# 前端依赖与构建产物
+library-vue/node_modules/
+library-vue/dist/
+
 # 系统文件
 .DS_Store
 
 # 本地数据库配置（含密码，不入库）
 src/main/resources/jdbc.properties
+
+# Kun 工具目录（计划文件等）
+.kunsdd/

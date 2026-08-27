@@ -1,8 +1,9 @@
 import axios from 'axios'
 
 const request = axios.create({
-  baseURL: 'http://localhost:8080/library_management_war/api',
+  baseURL: '/api',
   timeout: 10000,
+  withCredentials: true,
   headers: {
     'Content-Type': 'application/json'
   }
@@ -21,8 +22,12 @@ request.interceptors.response.use(
     return Promise.reject(new Error(msg))
   },
   error => {
+    const status = error.response?.status
     const msg = error.response?.data?.message || error.message || '请求失败'
-    alert(msg)
+    // 登录态探测接口未登录时静默处理（由路由守卫跳转登录页）
+    if (!(status === 401 && error.config?.url?.includes('/auth/current'))) {
+      alert(msg)
+    }
     console.error('[API Error]', msg)
     return Promise.reject(error)
   }

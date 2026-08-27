@@ -1,6 +1,6 @@
-﻿<template>
+<template>
   <div id="app-container">
-    <nav class="navbar">
+    <nav v-if="$route.path !== '/login'" class="navbar">
       <router-link to="/" class="brand">📚 图书借阅管理系统</router-link>
       <ul class="nav-links">
         <li><router-link to="/book">图书管理</router-link></li>
@@ -11,6 +11,10 @@
         <li><router-link to="/review">图书评价</router-link></li>
         <li><router-link to="/ranking">热门排行</router-link></li>
       </ul>
+      <div class="nav-user">
+        <span>{{ auth.username }}</span>
+        <button class="btn btn-sm btn-default" @click="handleLogout">退出</button>
+      </div>
     </nav>
     <main class="content">
       <router-view />
@@ -19,8 +23,20 @@
 </template>
 
 <script>
+import { useRouter } from 'vue-router'
+import { useAuthStore } from './stores/auth'
+
 export default {
-  name: 'App'
+  name: 'App',
+  setup() {
+    const auth = useAuthStore()
+    const router = useRouter()
+    const handleLogout = async () => {
+      await auth.logout()
+      router.push('/login')
+    }
+    return { auth, handleLogout }
+  }
 }
 </script>
 
@@ -63,6 +79,15 @@ export default {
 .nav-links li a:hover,
 .nav-links li a.router-link-active {
   color: #1890ff;
+}
+
+.nav-user {
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 13px;
+  color: #555;
 }
 
 .content {

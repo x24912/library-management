@@ -2,6 +2,10 @@ package com.huade.entity;
 
 public class BorrowRecord {
     private int id;
+    /** 外键：图书ID（book_title 为冗余快照，兼容旧数据） */
+    private int bookId;
+    /** 外键：读者ID（reader_name 为冗余快照，兼容旧数据） */
+    private int readerId;
     private String bookTitle;
     private String readerName;
     private String borrowDate;
@@ -12,22 +16,28 @@ public class BorrowRecord {
     public BorrowRecord() {
     }
 
-    public BorrowRecord(int id, String bookTitle, String readerName, String borrowDate, String dueDate, String actualReturnDate, String status) {
-        this.id = id;
-        this.bookTitle = bookTitle;
-        this.readerName = readerName;
-        this.borrowDate = borrowDate;
-        this.dueDate = dueDate;
-        this.actualReturnDate = actualReturnDate;
-        this.status = status;
-    }
-
     public int getId() {
         return id;
     }
 
     public void setId(int id) {
         this.id = id;
+    }
+
+    public int getBookId() {
+        return bookId;
+    }
+
+    public void setBookId(int bookId) {
+        this.bookId = bookId;
+    }
+
+    public int getReaderId() {
+        return readerId;
+    }
+
+    public void setReaderId(int readerId) {
+        this.readerId = readerId;
     }
 
     public String getBookTitle() {
@@ -81,6 +91,8 @@ public class BorrowRecord {
     @Override
     public String toString() {
         return "BorrowRecord{id=" + id
+                + ", bookId=" + bookId
+                + ", readerId=" + readerId
                 + ", bookTitle='" + bookTitle + "'"
                 + ", readerName='" + readerName + "'"
                 + ", borrowDate='" + borrowDate + "'"

@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- 让 JSESSIONID cookie 的 path 为 /（默认是 context path），
+     前端经 Vite 代理访问时（URL 不含 /library_management_war）也能携带会话 cookie -->
+<Context sessionCookiePath="/"/>

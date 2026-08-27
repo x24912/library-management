@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.huade.mapper.OverdueFineMapper">
+
+    <select id="findAll" resultType="OverdueFine">
+        select * from overdue_fine
+    </select>
+
+    <select id="findById" resultType="OverdueFine">
+        select * from overdue_fine where id = #{id}
+    </select>
+
+    <insert id="insert">
+        insert into overdue_fine(reader_name, book_title, overdue_days, fine_amount, payment_status)
+        values(#{readerName}, #{bookTitle}, #{overdueDays}, #{fineAmount}, #{paymentStatus})
+    </insert>
+
+    <update id="update">
+        update overdue_fine
+        set reader_name = #{readerName},
+            book_title = #{bookTitle},
+            overdue_days = #{overdueDays},
+            fine_amount = #{fineAmount},
+            payment_status = #{paymentStatus}
+        where id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        delete from overdue_fine where id = #{id}
+    </delete>
+
+    <select id="search" resultType="OverdueFine">
+        select * from overdue_fine
+        <where>
+            <if test="keyword != null and keyword.trim() != ''">
+                and (reader_name like concat('%', #{keyword}, '%')
+                    or book_title like concat('%', #{keyword}, '%')
+                    or payment_status like concat('%', #{keyword}, '%'))
+            </if>
+        </where>
+        order by id desc limit #{limit} offset #{offset}
+    </select>
+
+    <select id="count" resultType="int">
+        select count(*) from overdue_fine
+        <where>
+            <if test="keyword != null and keyword.trim() != ''">
+                and (reader_name like concat('%', #{keyword}, '%')
+                    or book_title like concat('%', #{keyword}, '%')
+                    or payment_status like concat('%', #{keyword}, '%'))
+            </if>
+        </where>
+    </select>
+
+</mapper>

@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.huade.mapper.ReaderMapper">
+
+    <select id="findAll" resultType="Reader">
+        select * from reader
+    </select>
+
+    <select id="findById" resultType="Reader">
+        select * from reader where id = #{id}
+    </select>
+
+    <insert id="insert">
+        insert into reader(full_name, student_id, class_name, max_borrow_count, borrowed_count, contact_number)
+        values(#{fullName}, #{studentId}, #{className}, #{maxBorrowCount}, #{borrowedCount}, #{contactNumber})
+    </insert>
+
+    <update id="update">
+        update reader
+        set full_name = #{fullName},
+            student_id = #{studentId},
+            class_name = #{className},
+            max_borrow_count = #{maxBorrowCount},
+            borrowed_count = #{borrowedCount},
+            contact_number = #{contactNumber}
+        where id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        delete from reader where id = #{id}
+    </delete>
+
+    <!-- 已借数量增减：防止扣成负数 -->
+    <update id="updateBorrowedCount">
+        update reader
+        set borrowed_count = borrowed_count + #{delta}
+        where id = #{id} and borrowed_count + #{delta} &gt;= 0
+    </update>
+
+    <select id="search" resultType="Reader">
+        select * from reader
+        <where>
+            <if test="keyword != null and keyword.trim() != ''">
+                and (full_name like concat('%', #{keyword}, '%')
+                    or student_id like concat('%', #{keyword}, '%')
+                    or class_name like concat('%', #{keyword}, '%'))
+            </if>
+        </where>
+        order by id desc limit #{limit} offset #{offset}
+    </select>
+
+    <select id="count" resultType="int">
+        select count(*) from reader
+        <where>
+            <if test="keyword != null and keyword.trim() != ''">
+                and (full_name like concat('%', #{keyword}, '%')
+                    or student_id like concat('%', #{keyword}, '%')
+                    or class_name like concat('%', #{keyword}, '%'))
+            </if>
+        </where>
+    </select>
+
+</mapper>

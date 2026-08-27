@@ -7,7 +7,7 @@
           <input v-model="keyword" placeholder="搜索书名/读者/状态" @keyup.enter="handleSearch" />
           <button class="btn btn-primary" @click="handleSearch">搜索</button>
         </div>
-        <router-link to="/borrow/add" class="btn btn-primary">+ 添加</router-link>
+        <router-link to="/borrow/add" class="btn btn-primary">+ 借书</router-link>
       </div>
     </div>
 
@@ -24,7 +24,11 @@
           <td>{{ item.actualReturnDate || '-' }}</td>
           <td>{{ item.status }}</td>
           <td>
-            <router-link :to="'/borrow/edit/' + item.id" class="btn btn-sm btn-default">编辑</router-link>
+            <button
+              v-if="item.status !== '已还'"
+              class="btn btn-sm btn-primary"
+              @click="handleReturn(item.id)"
+            >还书</button>
             <button class="btn btn-sm btn-danger" @click="handleDelete(item.id)">删除</button>
           </td>
         </tr>
@@ -48,7 +52,7 @@ import { borrowApi } from '../../api/index.js'
 import Pagination from '../../components/Pagination.vue'
 
 export default {
-  name: 'borrow\\BorrowList',
+  name: 'BorrowList',
   components: { Pagination },
   data() {
     return {
@@ -79,6 +83,21 @@ export default {
     handlePageChange(page) {
       this.page = page
       this.fetchList()
+    },
+    /** 还书：超期时后端自动生成罚款并返回 */
+    async handleReturn(id) {
+      if (!confirm('确认归还？')) return
+      try {
+        const fine = await borrowApi.returnBook(id)
+        if (fine) {
+          alert('归还成功：逾期 ' + fine.overdueDays + ' 天，罚款 ' + fine.fineAmount + ' 元')
+        } else {
+          alert('归还成功')
+        }
+        this.fetchList()
+      } catch (e) {
+        alert('归还失败：' + (e.response?.data?.message || e.message))
+      }
     },
     async handleDelete(id) {
       if (!confirm('确认删除？')) return

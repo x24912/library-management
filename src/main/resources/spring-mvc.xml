@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:mvc="http://www.springframework.org/schema/mvc"
+       xsi:schemaLocation="
+       http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+       http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context.xsd
+       http://www.springframework.org/schema/mvc http://www.springframework.org/schema/mvc/spring-mvc.xsd">
+
+    <!-- 注解驱动（classpath 含 jackson-databind 时自动注册 JSON 消息转换器） -->
+    <mvc:annotation-driven/>
+
+    <!-- 控制器扫描 -->
+    <context:component-scan base-package="com.huade.controller"/>
+
+    <!-- 登录拦截器：拦截 /api/*，放行登录接口 -->
+    <mvc:interceptors>
+        <mvc:interceptor>
+            <mvc:mapping path="/api/**"/>
+            <mvc:exclude-mapping path="/api/auth/login"/>
+            <bean class="com.huade.interceptor.LoginInterceptor"/>
+        </mvc:interceptor>
+    </mvc:interceptors>
+
+    <!-- CORS 白名单（Vue 开发服务器端口 3000） -->
+    <mvc:cors>
+        <mvc:mapping path="/api/**"
+                     allowed-origins="http://localhost:3000"
+                     allowed-methods="GET,POST,PUT,DELETE,OPTIONS"
+                     allowed-headers="Content-Type,Authorization"
+                     allow-credentials="true"/>
+    </mvc:cors>
+</beans>

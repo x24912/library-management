@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.huade.mapper.PopularRankingMapper">
+
+    <select id="findAll" resultType="PopularRanking">
+        select * from popular_ranking
+    </select>
+
+    <select id="findById" resultType="PopularRanking">
+        select * from popular_ranking where id = #{id}
+    </select>
+
+    <insert id="insert">
+        insert into popular_ranking(book_title, monthly_borrow_times, total_borrow_times, statistics_month)
+        values(#{bookTitle}, #{monthlyBorrowTimes}, #{totalBorrowTimes}, #{statisticsMonth})
+    </insert>
+
+    <update id="update">
+        update popular_ranking
+        set book_title = #{bookTitle},
+            monthly_borrow_times = #{monthlyBorrowTimes},
+            total_borrow_times = #{totalBorrowTimes},
+            statistics_month = #{statisticsMonth}
+        where id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        delete from popular_ranking where id = #{id}
+    </delete>
+
+    <select id="search" resultType="PopularRanking">
+        select * from popular_ranking
+        <where>
+            <if test="keyword != null and keyword.trim() != ''">
+                and (book_title like concat('%', #{keyword}, '%')
+                    or statistics_month like concat('%', #{keyword}, '%'))
+            </if>
+        </where>
+        order by id desc limit #{limit} offset #{offset}
+    </select>
+
+    <select id="count" resultType="int">
+        select count(*) from popular_ranking
+        <where>
+            <if test="keyword != null and keyword.trim() != ''">
+                and (book_title like concat('%', #{keyword}, '%')
+                    or statistics_month like concat('%', #{keyword}, '%'))
+            </if>
+        </where>
+    </select>
+
+</mapper>

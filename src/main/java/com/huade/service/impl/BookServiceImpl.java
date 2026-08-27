@@ -1,44 +1,49 @@
 package com.huade.service.impl;
 
-import com.huade.dao.BookDao;
-import com.huade.dao.impl.BookDaoImpl;
 import com.huade.entity.Book;
 import com.huade.entity.PageResult;
+import com.huade.mapper.BookMapper;
 import com.huade.service.BookService;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Service;
+
 import java.util.List;
 
+@Service
 public class BookServiceImpl implements BookService {
-    private BookDao bookDao = new BookDaoImpl();
+
+    @Autowired
+    private BookMapper bookMapper;
 
     @Override
     public List<Book> findAll() {
-        return bookDao.findAll();
+        return bookMapper.findAll();
     }
 
     @Override
     public Book findById(int id) {
-        return bookDao.findById(id);
+        return bookMapper.findById(id);
     }
 
     @Override
     public int add(Book book) {
-        return bookDao.insert(book);
+        return bookMapper.insert(book);
     }
 
     @Override
     public int modify(Book book) {
-        return bookDao.update(book);
+        return bookMapper.update(book);
     }
 
     @Override
     public int remove(int id) {
-        return bookDao.delete(id);
+        return bookMapper.deleteById(id);
     }
 
     @Override
     public PageResult<Book> search(String keyword, int page, int limit) {
-        List<Book> data = bookDao.search(keyword, page, limit);
-        int total = bookDao.count(keyword);
+        List<Book> data = bookMapper.search(keyword, (page - 1) * limit, limit);
+        int total = bookMapper.count(keyword);
         return new PageResult<>(data, page, limit, total);
     }
 }

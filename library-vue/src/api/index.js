@@ -12,8 +12,25 @@ function createApi(path) {
 
 export const bookApi     = createApi('/book')
 export const readerApi   = createApi('/reader')
-export const borrowApi   = createApi('/borrow')
 export const categoryApi = createApi('/category')
 export const fineApi     = createApi('/fine')
 export const reviewApi   = createApi('/review')
-export const rankingApi  = createApi('/ranking')
+
+// 借阅：借书走业务接口（body 传 {bookId, readerId}），还书单独接口
+export const borrowApi = {
+  ...createApi('/borrow'),
+  borrow:     (data) => request.post('/borrow', data),
+  returnBook: (id)   => request.put('/borrow/' + id + '/return')
+}
+
+// 排行：实时聚合，无分页/增删改
+export const rankingApi = {
+  list: (params) => request.get('/ranking', { params })
+}
+
+// 认证
+export const authApi = {
+  login:   (data) => request.post('/auth/login', data),
+  logout:  ()     => request.post('/auth/logout'),
+  current: ()     => request.get('/auth/current')
+}

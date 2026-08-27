@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.huade.mapper.BorrowRecordMapper">
+
+    <select id="findAll" resultType="BorrowRecord">
+        select * from borrow_record
+    </select>
+
+    <select id="findById" resultType="BorrowRecord">
+        select * from borrow_record where id = #{id}
+    </select>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id">
+        insert into borrow_record(book_id, reader_id, book_title, reader_name, borrow_date, due_date, actual_return_date, status)
+        values(#{bookId}, #{readerId}, #{bookTitle}, #{readerName}, #{borrowDate}, #{dueDate}, #{actualReturnDate}, #{status})
+    </insert>
+
+    <update id="update">
+        update borrow_record
+        set book_id = #{bookId},
+            reader_id = #{readerId},
+            book_title = #{bookTitle},
+            reader_name = #{readerName},
+            borrow_date = #{borrowDate},
+            due_date = #{dueDate},
+            actual_return_date = #{actualReturnDate},
+            status = #{status}
+        where id = #{id}
+    </update>
+
+    <delete id="deleteById">
+        delete from borrow_record where id = #{id}
+    </delete>
+
+    <!-- 某读者当前在借某书的记录数（status 为借出/逾期均算在借） -->
+    <select id="countActive" resultType="int">
+        select count(*) from borrow_record
+        where book_id = #{bookId} and reader_id = #{readerId} and status != '已还'
+    </select>
+
+    <!-- 热门排行：从借阅记录实时聚合，按总借阅次数倒序 -->
+    <select id="selectRanking" resultType="PopularRanking">
+        select book_title, count(*) as total_borrow_times
+        from borrow_record
+        group by book_title
+        order by total_borrow_times desc, book_title asc
+        limit #{limit}
+    </select>
+
+    <select id="search" resultType="BorrowRecord">
+        select * from borrow_record
+        <where>
+            <if test="keyword != null and keyword.trim() != ''">
+                and (book_title like concat('%', #{keyword}, '%')
+                    or reader_name like concat('%', #{keyword}, '%')
+                    or status like concat('%', #{keyword}, '%'))
+            </if>
+        </where>
+        order by id desc limit #{limit} offset #{offset}
+    </select>
+
+    <select id="count" resultType="int">
+        select count(*) from borrow_record
+        <where>
+            <if test="keyword != null and keyword.trim() != ''">
+                and (book_title like concat('%', #{keyword}, '%')
+                    or reader_name like concat('%', #{keyword}, '%')
+                    or status like concat('%', #{keyword}, '%'))
+            </if>
+        </where>
+    </select>
+
+</mapper>

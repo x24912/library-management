@@ -43,11 +43,6 @@ public class BorrowRecordServiceImpl implements BorrowRecordService {
     private OverdueFineMapper overdueFineMapper;
 
     @Override
-    public List<BorrowRecord> findAll() {
-        return borrowRecordMapper.findAll();
-    }
-
-    @Override
     public BorrowRecord findById(int id) {
         return borrowRecordMapper.findById(id);
     }

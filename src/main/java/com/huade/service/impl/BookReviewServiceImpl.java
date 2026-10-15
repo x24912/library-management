@@ -16,11 +16,6 @@ public class BookReviewServiceImpl implements BookReviewService {
     private BookReviewMapper bookReviewMapper;
 
     @Override
-    public List<BookReview> findAll() {
-        return bookReviewMapper.findAll();
-    }
-
-    @Override
     public BookReview findById(int id) {
         return bookReviewMapper.findById(id);
     }

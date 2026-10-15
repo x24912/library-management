@@ -16,11 +16,6 @@ public class BookCategoryServiceImpl implements BookCategoryService {
     private BookCategoryMapper bookCategoryMapper;
 
     @Override
-    public List<BookCategory> findAll() {
-        return bookCategoryMapper.findAll();
-    }
-
-    @Override
     public BookCategory findById(int id) {
         return bookCategoryMapper.findById(id);
     }

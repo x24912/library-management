@@ -6,8 +6,6 @@ import org.apache.ibatis.annotations.Param;
 import java.util.List;
 
 public interface BookMapper {
-    List<Book> findAll();
-
     Book findById(int id);
 
     int insert(Book book);

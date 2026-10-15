@@ -3,10 +3,6 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.huade.mapper.BorrowRecordMapper">
 
-    <select id="findAll" resultType="BorrowRecord">
-        select * from borrow_record
-    </select>
-
     <select id="findById" resultType="BorrowRecord">
         select * from borrow_record where id = #{id}
     </select>

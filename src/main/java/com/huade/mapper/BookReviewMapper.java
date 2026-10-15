@@ -6,8 +6,6 @@ import org.apache.ibatis.annotations.Param;
 import java.util.List;
 
 public interface BookReviewMapper {
-    List<BookReview> findAll();
-
     BookReview findById(int id);
 
     int insert(BookReview review);

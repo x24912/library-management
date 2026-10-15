@@ -16,11 +16,6 @@ public class OverdueFineServiceImpl implements OverdueFineService {
     private OverdueFineMapper overdueFineMapper;
 
     @Override
-    public List<OverdueFine> findAll() {
-        return overdueFineMapper.findAll();
-    }
-
-    @Override
     public OverdueFine findById(int id) {
         return overdueFineMapper.findById(id);
     }

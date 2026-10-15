@@ -4,11 +4,7 @@ import com.huade.entity.BorrowRecord;
 import com.huade.entity.OverdueFine;
 import com.huade.entity.PageResult;
 
-import java.util.List;
-
 public interface BorrowRecordService {
-    List<BorrowRecord> findAll();
-
     BorrowRecord findById(int id);
 
     /** 借书：校验库存/读者额度/重复借阅，扣库存、记已借数、生成借阅记录（事务） */

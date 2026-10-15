@@ -16,11 +16,6 @@ public class ReaderServiceImpl implements ReaderService {
     private ReaderMapper readerMapper;
 
     @Override
-    public List<Reader> findAll() {
-        return readerMapper.findAll();
-    }
-
-    @Override
     public Reader findById(int id) {
         return readerMapper.findById(id);
     }

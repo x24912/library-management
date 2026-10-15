@@ -6,8 +6,6 @@ import org.apache.ibatis.annotations.Param;
 import java.util.List;
 
 public interface OverdueFineMapper {
-    List<OverdueFine> findAll();
-
     OverdueFine findById(int id);
 
     int insert(OverdueFine fine);

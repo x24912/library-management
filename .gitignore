@@ -27,3 +27,4 @@ src/main/resources/jdbc.properties
 
 # Kun 工具目录（计划文件等）
 .kunsdd/
+.kun/

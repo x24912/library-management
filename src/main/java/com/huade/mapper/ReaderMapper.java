@@ -6,8 +6,6 @@ import org.apache.ibatis.annotations.Param;
 import java.util.List;
 
 public interface ReaderMapper {
-    List<Reader> findAll();
-
     Reader findById(int id);
 
     int insert(Reader reader);

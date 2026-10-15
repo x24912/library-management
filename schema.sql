@@ -78,14 +78,9 @@ CREATE TABLE IF NOT EXISTS book_review (
     review_time    DATETIME     NULL COMMENT '评价时间'
 ) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='图书评价';
 
--- 热门排行（已废弃：排行榜现由 borrow_record 实时聚合，本表保留仅为兼容）
-CREATE TABLE IF NOT EXISTS popular_ranking (
-    id                  INT AUTO_INCREMENT PRIMARY KEY,
-    book_title          VARCHAR(200) NOT NULL,
-    monthly_borrow_times INT         NOT NULL DEFAULT 0,
-    total_borrow_times  INT          NOT NULL DEFAULT 0,
-    statistics_month    VARCHAR(7)   NULL
-) ENGINE = InnoDB DEFAULT CHARSET = utf8mb4 COMMENT ='热门排行（废弃）';
+-- 热门排行：原 popular_ranking 表已删除
+-- 排行榜现由 borrow_record 实时聚合（见 BorrowRecordMapper.xml 的 selectRanking），
+-- 该表无任何代码写入或读取，纯属历史遗留，故移除。
 
 -- 管理员（登录认证）
 CREATE TABLE IF NOT EXISTS admin (

@@ -3,10 +3,6 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.huade.mapper.BookReviewMapper">
 
-    <select id="findAll" resultType="BookReview">
-        select * from book_review
-    </select>
-
     <select id="findById" resultType="BookReview">
         select * from book_review where id = #{id}
     </select>

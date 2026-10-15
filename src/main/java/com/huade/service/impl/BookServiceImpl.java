@@ -16,11 +16,6 @@ public class BookServiceImpl implements BookService {
     private BookMapper bookMapper;
 
     @Override
-    public List<Book> findAll() {
-        return bookMapper.findAll();
-    }
-
-    @Override
     public Book findById(int id) {
         return bookMapper.findById(id);
     }

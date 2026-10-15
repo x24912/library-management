@@ -7,8 +7,6 @@ import org.apache.ibatis.annotations.Param;
 import java.util.List;
 
 public interface BorrowRecordMapper {
-    List<BorrowRecord> findAll();
-
     BorrowRecord findById(int id);
 
     int insert(BorrowRecord record);

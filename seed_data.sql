@@ -1,3 +1,7 @@
+-- ========== 图书借阅管理系统 演示数据（MySQL 8） ==========
+-- 前置条件：先执行 schema.sql 完成建库建表
+USE library_db;
+
 -- ========== 图书分类 book_category (20条) ==========
 INSERT INTO book_category (category_name, allowed_borrow_days, description) VALUES
 ('计算机科学', 60, '编程语言、算法、数据结构等计算机相关书籍'),
@@ -147,6 +151,18 @@ SET br.book_id = b.id;
 UPDATE borrow_record br
     JOIN reader r ON r.full_name = br.reader_name
 SET br.reader_id = r.id;
+
+-- ========== 读者已借数回填（按在借记录重算，覆盖上方 INSERT 中的占位值） ==========
+-- 口径与业务逻辑一致：status <> '已还' 即为在借（借出/逾期都算），
+-- 对应 BorrowRecordMapper.countActive 与 BorrowRecordServiceImpl 的额度校验。
+UPDATE reader r
+    LEFT JOIN (
+        SELECT reader_id, COUNT(*) AS cnt
+        FROM borrow_record
+        WHERE status <> '已还'
+        GROUP BY reader_id
+    ) a ON a.reader_id = r.id
+SET r.borrowed_count = COALESCE(a.cnt, 0);
 
 -- ========== 管理员（默认账号 admin / 123456，密码为 PBKDF2 哈希） ==========
 INSERT INTO admin (username, password) VALUES
